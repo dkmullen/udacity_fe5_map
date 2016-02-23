@@ -9,7 +9,7 @@ This app can be modified for any location simply by changing location data in th
 
 ### View
 
-View a live demo of this project [here](https://cdn.rawgit.com/dkmullen/udacity_fe5_map/master/dist/index.html).
+View a live demo of this project [here](https://cdn.rawgit.com/dkmullen/udacity_fe5_map/master/src/index.html).
 
 ### Installation
 
