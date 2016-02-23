@@ -107,7 +107,8 @@ li {
 	margin-bottom: 5px;
 }
 #search {
-	margin: 5px 5px 10px 0;
+	margin: 5px 5px 0 0;
+	display: inline-block;
 }
 #submit {
 	background-color: transparent;
@@ -115,7 +116,6 @@ li {
 	border: none;
 	height: 22px;
 	width: 25px;
-	display: inline-block;
 	margin-right: 5px;
 }
 #show {
@@ -130,7 +130,7 @@ li {
 .hamburger-button {
 	position: fixed;
 	right: 3px;
-	bottom: 33px;
+	bottom: 45px;
 	z-index: 2;
 	background-color: transparent;
 	border: none;
@@ -153,8 +153,8 @@ li {
 #info-button {
 	background-color: transparent;
 	background-image: url(../pix/info.png);
-	height: 24px;
-	width: 24px;
+	height: 36px;
+	width: 36px;
 	border: none;
 	position: fixed;
 	bottom: 50px;
@@ -165,6 +165,10 @@ input, button:focus {
 }
 #submit:hover, #show:hover, button:hover, #info-button:hover {
 	background-color: rgba(200, 200, 200, 0.5);
+}
+#search-hints {
+	font-size: 70%;
+	margin-bottom: 3px;
 }
 
 /* Styles the infowindow Google Maps creates */
@@ -211,11 +215,33 @@ input, button:focus {
 	width: 32px;
 	border: none;
 }
-/* End credits box, begin media queries */
+/* End credits box */
 
+/* Div that gets displayed when Google Maps fails */
+#map-fail {
+	width: 200px;
+	max-width: 75%;
+	text-align: center;
+	border: 1px solid rgb(200, 200, 200);
+	padding: 10px;
+	background-color: rgb(255, 255, 255);
+	z-index: 4;
+	position: fixed;
+	/* The lines below center the top corner, then pull the box
+	   back toward center */
+	top: 50%;
+	left: 50%;
+	margin-top: -75px;
+	margin-left: -100px;
+}
+
+/* Media queries start here */
 @media (max-height: 399px) {
 	#info-box {
 		font-size: 90%;
+	}
+	.hamburger-button {
+		bottom: 37px;
 	}
 }
 @media (max-width: 499px), (max-height: 399px) {

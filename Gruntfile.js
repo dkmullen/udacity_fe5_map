@@ -24,7 +24,8 @@ module.exports = function(grunt) {
         files: {
           'dist/js/app.js': 'src/js/app.js',
 		  'dist/js/knockout-3.4.0.js': 'src/js/knockout-3.4.0.js',
-		  'dist/js/oauth-signature.js': 'src/js/oauth-signature.js'
+		  'dist/js/oauth-signature.js': 'src/js/oauth-signature.js',
+		  'dist/js/jquery.easy-autocomplete.min.js': 'src/js/jquery.easy-autocomplete.min.js'
         }
       }
     },
@@ -36,7 +37,8 @@ module.exports = function(grunt) {
       },
       build: {
         files: {
-          'dist/css/style.css': 'src/css/style.css'
+          'dist/css/style.css': 'src/css/style.css',
+		  'dist/css/easy-autocomplete.css': 'src/css/easy-autocomplete.css'
         }
       }
     },
@@ -73,7 +75,6 @@ module.exports = function(grunt) {
   // make sure you have run npm install so our app can find these
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
-  grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-imagemin');
   grunt.loadNpmTasks('grunt-contrib-htmlmin');
   

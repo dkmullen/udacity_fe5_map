@@ -11,7 +11,7 @@ var Model = {
 			locationID: 17269784,
 			source: 'Zomato',
 			type: 'Restaurant',			
-			keys: 'pizza Italian Kingston all',
+			keys: 'pizza Italian Mama-Mia\'s',
 			icon: 'pizza.png'
 		},
 		{position: {lat: 35.885723, lng: -84.497461},
@@ -21,7 +21,7 @@ var Model = {
 			locationID: 'gloria-jeans-kingston',
 			source: 'Yelp',
 			type: 'Restaurant',
-			keys: 'burgers sandwiches southern pie Kingston all',
+			keys: 'burgers sandwiches southern pie Gloria-Jean\'s',
 			icon: 'dinner.png'
 		},
 		{position: {lat: 35.882102, lng: -84.505977},
@@ -31,7 +31,7 @@ var Model = {
 			locationID: 17270326,
 			source: 'Zomato',
 			type: 'Restaurant',
-			keys: 'bar tequila beer Kingston all',
+			keys: 'bar tequila beer Don-Eduardo\'s',
 			icon: 'dinner.png'
 		},
 		{position: {lat: 35.877760, lng: -84.511819},
@@ -41,7 +41,7 @@ var Model = {
 			locationID: '17269786',
 			source: 'Zomato',
 			type: 'Restaurant',
-			keys: 'Chinese Asian Kingston all',
+			keys: 'Chinese Asian Mei-Wei',
 			icon: 'dinner.png'
 		},
 		{position: {lat: 35.874415, lng: -84.515031},
@@ -51,7 +51,7 @@ var Model = {
 			locationID: 17269781,
 			source: 'Zomato',
 			type: 'Restaurant',
-			keys: 'breakfast biscuits gravy sliders Kingston all',
+			keys: 'breakfast biscuits-n-gravy sliders Handee-Burger',
 			icon: 'hamburger.png'
 		},
 		{position: {lat: 35.861100, lng: -84.527949},
@@ -61,18 +61,18 @@ var Model = {
 			locationID: 'fort-southwest-point-kingston',
 			source: 'Yelp',
 			type: 'Park',
-			keys: 'museum history cannon Kingston all',
+			keys: 'museum history cannon Fort-Southwest-Point',
 			icon: 'cannon.png'
 		},
 		{position: {lat: 35.870925, lng: -84.515573},
 			map: map,
 			title: 'Kingston Barber Shop',
 			description: 'Kingston Barber Shop: A great place for your' +
-			'Elvis-related looks',
+			' Elvis-related looks',
 			locationID: 'kingston-barber-shop-kingston-3',
 			source: 'Yelp',
-			type: 'Barber',
-			keys: 'barber haircut trim Kingston all',
+			type: 'Barber-Shop',
+			keys: 'barber haircut trim Kingston-Barber-Shop',
 			icon: 'barber.png'
 		}
 	],
@@ -128,6 +128,8 @@ var Control = {
  */
 function getZomato(x) {
 	var businessStr;
+	var failStr = '<div class="infowindow">' + x.description +
+			'.<p>(Zomato is not currently available).</p></div>';
 	this.vendorData = Control.getVendor('Zomato');
 	
 	/** Creates the url Zomato requires for JSON request */
@@ -147,7 +149,7 @@ function getZomato(x) {
 			business.user_rating.rating_text + ')</p>' +
 			'<p id="vendor-credits"><a href="' + business.url + 
 			'" target="new">Powered by Zomato</a></p><div>';
-		
+			
 		/**  If Zomato's 'business thumb' is their placeholder, don't use it. */
 		if (business.thumb !== 
 			'https://b.zmtcdn.com/images/res_avatar_120_1x_new.png') {
@@ -161,7 +163,7 @@ function getZomato(x) {
 	})
 	/** Fills infowidow with hard-coded description upon fail */
 	.fail(function() {
-		infowindow.setContent(x.description);
+		infowindow.setContent(failStr);
 	});
 }
 /** End Zomato ---------------------------------------- */
@@ -171,6 +173,8 @@ function getZomato(x) {
  */
 function getYelp(x) {
 	var businessStr;
+	var failStr = '<div class="infowindow">' + x.description +
+			'.<p>(Yelp is not currently available).</p></div>';
 	this.vendorData = Control.getVendor('Yelp');
 
 /** The makeid function (modified slightly by me) comes from csharptest.net
@@ -249,7 +253,7 @@ function getYelp(x) {
 	})
 	/** Fills infowidow with hard-coded description upon fail */
 	.fail(function() {
-		infowindow.setContent(x.description);
+		infowindow.setContent(failStr);
 	});
 }
 /** End Yelp ------------------------------------------ */
@@ -257,6 +261,7 @@ function getYelp(x) {
 /** Init Google Map, etc. */
 var map, infowindow, allPlaces;
 var markers = ko.observableArray();
+var mapFailMessage = ko.observable(false);
 
 /** Structure supplied by Google's API. I moved the controls around a bit */
 function initMap() {
@@ -271,7 +276,7 @@ function initMap() {
 			position: google.maps.ControlPosition.LEFT_TOP
 		}
 	});	
-	
+
 /** This solution for keeping the map centered on viewport resize comes from:
   * http://stackoverflow.com/questions/8792676/center-google-maps-v3-on-
 	browser-resize-responsive
@@ -290,13 +295,23 @@ function initMap() {
 	
 	/** Rather than center on a point, we give the map boundaries */
 	var coords = Control.getMyCoords();
-	map.fitBounds(coords[0]);
+	var bounds = new google.maps.LatLngBounds(
+		new google.maps.LatLng(coords[0].south, coords[0].west),
+		new google.maps.LatLng(coords[0].north, coords[0].east)
+	);
+	map.fitBounds(bounds);
 	
 	allPlaces = Control.getAllPlaces();
-	initMarkers(allPlaces);
+	initMarkers(allPlaces, coords, bounds);
 	initInfoWindow();
 }
-
+/** When Google Maps fails, onerror in the htmm calls this function
+ *  @function
+ */
+function googleError() {
+	mapFailMessage(true);
+}
+	
 function initInfoWindow() {
 	infowindow = new google.maps.InfoWindow({
 			maxWidth: 275
@@ -306,18 +321,24 @@ function initInfoWindow() {
 /** Loops through the places in Model, makes a marker with the listed properties
  *  and a custom icon, adds a listener and pushes each to the observable array
  *  @function
-*/
-function initMarkers(allPlaces) {
+ */
+function initMarkers(allPlaces, coords, bounds) {
+
 	for (var i = 0; i < allPlaces.length; i++) {
 		this.place = allPlaces[i]; 
 		var image = './pix/' + place.icon;
+		
 		marker = new google.maps.Marker({
 			animation: google.maps.Animation.DROP,
 			position: place.position,
 			map: map,
 			icon: image,
-			title: place.title	
+			title: place.title
 		});
+		
+		/** Extends map boundaries to be sure to include each marker */
+		bounds.extend(marker.position);
+		
 		/** Records which marker is clicked, passes it to the two functions*/
 		marker.addListener('click', (function(placeCopy) {
 			return function() {
@@ -326,6 +347,9 @@ function initMarkers(allPlaces) {
 			};
 		})(place));
 		markers.push(marker);
+		
+		/** Expands the map to include each new marker */
+		map.fitBounds(bounds);
 	}
 }
 
@@ -368,10 +392,11 @@ function toggleBounce() {
 }
 /** End Google Maps init section ---------------------- */
 
+
 /** ViewModel */
 function ViewModel() {
 	var self = this;
-	var bool;
+	var bool, placeStr;
 	var bool2 = false;
 	self.filterStr = ko.observable('');
 	self.showMenu = ko.observable(bool);
@@ -451,13 +476,16 @@ function ViewModel() {
 		for (var i = 0; i < this.places().length; i++) {
 			this.places()[i].visible(true);
 			markers()[i].setMap(map);
-			var placeStr = this.places()[i].description.toLowerCase() + ' ' +
-				this.places()[i].title.toLowerCase() +  ' ' +
-				this.places()[i].type.toLowerCase() +
+			
+			/** Make sure all lines are space-separated to avoid bad matches */
+			self.placeStr = this.places()[i].description.toLowerCase() + ' ' +
+				this.places()[i].title.toLowerCase() + ' ' +
+				this.places()[i].type.toLowerCase() + ' ' +
 				this.places()[i].keys.toLowerCase();
+			
 			/** Looks for result (the lowercase version of user input in 
 			 *  placeStr (the lowercase version of all the place data) */
-			var n = placeStr.search(result);
+			var n = self.placeStr.search(result);
 			/** -1 indicates no match, so cooresponding menu items and markers
 			 *  are hidden */
 			if (n == -1) {
@@ -480,6 +508,63 @@ function ViewModel() {
 			this.showAll();
 			this.noMatches(1);
 		}
+	};	
+	
+	/** This section makes an auto complete feature for search and uses
+	 *  EasyAutoComplete: http://easyautocomplete.com/
+   	 */
+	this.autoFillStr = '';
+	/** Gets all the key words from places, adds them to the string, makes 
+	 *  sure new lines have a space between
+	 */
+	for (i = 0; i < this.places().length; i++) {
+		self.autoFillStr += this.places()[i].keys + ' ' +
+			this.places()[i].type + ' ';
+	}
+	/** Splits the string on space, makes an array */
+	var arr = self.autoFillStr.split(' ');
+	
+	/** Duplicate words in the array show up multiple times in the auto-complete
+	 *  list, so this funtion eliminates them. Thanks to:
+	 *  https://dreaminginjavascript.wordpress.com/2008/08/22/eliminating-duplicates/
+	 */
+	function eliminateDuplicates(arr) {
+		var i,
+			len = arr.length,
+			out = [],
+			obj = {};
+
+	  for (i = 0; i < len; i++) {
+		/** The next line makes a key:value pair of item: 0. In JS objects,
+		 *  keys are unique, so duplicaates get overwritten as the loop runs.
+		 */
+			obj[arr[i]] = 0;
+	  }
+	  /** Finally, we push the keys back to an array, with no duplicates! */
+	  for (i in obj) {
+			out.push(i);
+	  }
+	  return out;
+	}
+	
+	var autoFillItems = eliminateDuplicates(arr);
+	
+	/** Sets data and theme for EasyAutoComplete; 'Match' makes sure that
+	 *  non-matches disappear from the list as you type
+	 */
+	var options = {
+		data: autoFillItems,
+		list: {
+			match: {
+				enabled: true
+			}
+		},
+		theme: "dark"
 	};
+	/** Calls a method from the autocomplete js on the search field in html */
+	$("#search").easyAutocomplete(options);
+	
+	/** End auto-complete section ---------------------- */
 }
 ko.applyBindings(new ViewModel());
+
